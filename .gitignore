@@ -7,9 +7,6 @@ __pycache__/
 core/ffmpeg/
 
 
-# Gardons les fichiers de licence et documentation textuelle de base
-!core/ffmpeg/LICENSE.txt
-
 # Flask session files
 flask_session/
 
