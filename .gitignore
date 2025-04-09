@@ -4,8 +4,9 @@ __pycache__/
 *$py.class
 
 # FFmpeg binaries and documentation (too large for GitHub)
-core/ffmpeg/bin/
-core/ffmpeg/doc/
+core/ffmpeg/
+
+
 # Gardons les fichiers de licence et documentation textuelle de base
 !core/ffmpeg/LICENSE.txt
 
