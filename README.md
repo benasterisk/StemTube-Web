@@ -43,8 +43,18 @@ The application features real-time progress updates, an integrated user authenti
 ### Prerequisites
 
 - Python 3.8+
-- FFmpeg (automatically downloaded if not available)
 - Web browser (Chrome/Firefox recommended)
+- FFmpeg (see note below)
+
+> **Note about FFmpeg**: 
+> - **Windows**: The application will automatically download and install FFmpeg if it's not found. This process works out of the box on Windows systems.
+> - **Linux/MacOS**: You need to install FFmpeg manually using your system's package manager:
+>   - Ubuntu/Debian: `sudo apt install ffmpeg`
+>   - Fedora: `sudo dnf install ffmpeg`
+>   - Arch: `sudo pacman -S ffmpeg`
+>   - MacOS: `brew install ffmpeg`
+>
+> The FFmpeg binaries are not included in the GitHub repository due to their size limitations.
 
 ### Setup
 

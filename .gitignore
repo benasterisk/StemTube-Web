@@ -3,6 +3,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# FFmpeg binaries and documentation (too large for GitHub)
+core/ffmpeg/bin/
+core/ffmpeg/doc/
+# Gardons les fichiers de licence et documentation textuelle de base
+!core/ffmpeg/LICENSE.txt
+
 # Flask session files
 flask_session/
 
