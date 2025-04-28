@@ -1,0 +1,12 @@
+{
+  "name": "stemtubesweb",
+  "version": "1.0.0",
+  "description": "A comprehensive web application for discovering, downloading and mixing audio stems from YouTube videos.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

@@ -21,29 +21,34 @@ class WaveformRenderer {
         const stem = this.mixer.stems[name];
         if (!stem || !stem.waveformData) return;
         
-        // Récupérer le conteneur de la forme d'onde
-        const waveformContainer = document.querySelector(`.track[data-stem="${name}"] .waveform`);
+        // Correction : sélectionner le bon container et la bonne div
+        // waveformContainer = .track[data-stem="${name}"] .waveform-container
+        const waveformContainer = document.querySelector(`.track[data-stem="${name}"] .waveform-container`);
         if (!waveformContainer) {
             this.mixer.log(`Conteneur de forme d'onde non trouvé pour ${name}`);
             return;
         }
-        
+        let waveformDiv = waveformContainer.querySelector('.waveform');
+        if (!waveformDiv) {
+            waveformDiv = document.createElement('div');
+            waveformDiv.className = 'waveform';
+            waveformContainer.appendChild(waveformDiv);
+        }
+        // Largeur dynamique selon le zoom horizontal
+        waveformDiv.style.width = (100 * this.mixer.zoomLevels.horizontal) + '%';
         // Créer un canvas s'il n'existe pas déjà
-        let canvas = waveformContainer.querySelector('canvas');
+        let canvas = waveformDiv.querySelector('canvas');
         if (!canvas) {
             canvas = document.createElement('canvas');
-            waveformContainer.appendChild(canvas);
+            waveformDiv.appendChild(canvas);
         }
-        
         // Ajuster la taille du canvas à celle de son conteneur
-        canvas.width = waveformContainer.offsetWidth * window.devicePixelRatio;
-        canvas.height = waveformContainer.offsetHeight * window.devicePixelRatio;
+        canvas.width = waveformDiv.offsetWidth * window.devicePixelRatio;
+        canvas.height = waveformDiv.offsetHeight * window.devicePixelRatio;
         canvas.style.width = '100%';
         canvas.style.height = '100%';
-        
         // Dessiner la forme d'onde
         this.renderWaveformToCanvas(canvas, stem.waveformData);
-        
         // Stocker le canvas dans le cache
         this.canvasCache[name] = {
             canvas,

@@ -76,6 +76,7 @@
                     <div class="mixer-container" id="mixerContainer">
                         <div id="loading" class="loading">Chargement des stems audio...</div>
                         <iframe id="mixerFrame" src="/mixer" style="width: 100%; height: 800px; min-height: 800px; border: none; display: none;"></iframe>
+                        <iframe id="mixer2Frame" src="/mixer_2" style="width: 100%; height: 800px; min-height: 800px; border: none; display: none;"></iframe>
                     </div>
                 </div>
             </div>
@@ -333,6 +334,7 @@
             }
 
             const mixerFrame = document.getElementById('mixerFrame');
+            const mixer2Frame = document.getElementById('mixer2Frame');
             const loadingDiv = document.getElementById('loading');
             
             // Show the iframe once it's loaded

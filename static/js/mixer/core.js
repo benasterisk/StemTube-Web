@@ -33,8 +33,12 @@ class StemMixer {
             zoomOutH: document.getElementById('zoom-out-h'),
             zoomInV: document.getElementById('zoom-in-v'),
             zoomOutV: document.getElementById('zoom-out-v'),
-            zoomReset: document.getElementById('zoom-reset')
+            zoomReset: document.getElementById('zoom-reset'),
+            autoscrollBtn: document.getElementById('autoscroll-btn')
         };
+        // Autoscroll state
+        this.isAutoscrolling = false;
+        this.autoscrollInterval = null;
         
         // Initialiser les modules
         this.initModules();
@@ -85,6 +89,9 @@ class StemMixer {
             // Définir la variable globale pour l'ID d'extraction
             this.extractionId = EXTRACTION_ID;
             this.encodedExtractionId = ENCODED_EXTRACTION_ID;
+            try {
+                localStorage.setItem('extraction_id', this.extractionId);
+            } catch (e) {}
             
             // Initialiser le contexte audio
             await this.audioEngine.initAudioContext();
@@ -112,6 +119,7 @@ class StemMixer {
                 this.waveform.resizeAllWaveforms();
                 this.waveform.updateAllWaveforms();
                 this.setupScrollSynchronization();
+                this.updateAutoscrollButtonVisibility(); // <-- Ajout ici
                 this.log('Rendu des formes d\'onde effectué après initialisation complète');
             }, 300);
             
@@ -165,27 +173,28 @@ class StemMixer {
             this.elements.zoomInH.addEventListener('click', () => {
                 this.zoomLevels.horizontal = Math.min(10, this.zoomLevels.horizontal * 1.2);
                 this.waveform.updateAllWaveforms();
+                setTimeout(() => this.updateAutoscrollButtonVisibility(), 0); // Correction: attendre le layout
             });
         }
-        
         if (this.elements.zoomOutH) {
             this.elements.zoomOutH.addEventListener('click', () => {
                 this.zoomLevels.horizontal = Math.max(0.5, this.zoomLevels.horizontal / 1.2);
                 this.waveform.updateAllWaveforms();
+                setTimeout(() => this.updateAutoscrollButtonVisibility(), 0);
             });
         }
-        
         if (this.elements.zoomInV) {
             this.elements.zoomInV.addEventListener('click', () => {
                 this.zoomLevels.vertical = Math.min(10, this.zoomLevels.vertical * 1.2);
                 this.waveform.updateAllWaveforms();
+                setTimeout(() => this.updateAutoscrollButtonVisibility(), 0);
             });
         }
-        
         if (this.elements.zoomOutV) {
             this.elements.zoomOutV.addEventListener('click', () => {
                 this.zoomLevels.vertical = Math.max(0.5, this.zoomLevels.vertical / 1.2);
                 this.waveform.updateAllWaveforms();
+                setTimeout(() => this.updateAutoscrollButtonVisibility(), 0);
             });
         }
         
@@ -209,6 +218,27 @@ class StemMixer {
                 this.stop();
             }
         });
+        
+        // Bouton Autoscroll
+        if (this.elements.autoscrollBtn) {
+            this.elements.autoscrollBtn.addEventListener('click', () => {
+                if (this.isAutoscrolling) {
+                    this.stopAutoscroll();
+                } else {
+                    this.startAutoscroll();
+                }
+            });
+        }
+        // Afficher/masquer le bouton autoscroll selon le besoin
+        this.updateAutoscrollButtonVisibility();
+        // Réagir au redimensionnement de la fenêtre
+        window.addEventListener('resize', () => this.updateAutoscrollButtonVisibility());
+        // Arrêter l'autoscroll si l'utilisateur interagit avec le scroll
+        document.addEventListener('scroll', (e) => {
+            if (this.isAutoscrolling && e.target.classList && e.target.classList.contains('waveform-container')) {
+                this.stopAutoscroll();
+            }
+        }, true);
         
         this.log('Écouteurs d\'événements configurés');
     }
@@ -372,6 +402,81 @@ class StemMixer {
     updateTimeDisplay() {
         if (this.elements.timeDisplay) {
             this.elements.timeDisplay.textContent = this.formatTime(this.currentTime);
+        }
+    }
+
+    updateAutoscrollButtonVisibility() {
+        const containers = document.querySelectorAll('.waveform-container');
+        let show = false;
+        containers.forEach(container => {
+            // DEBUG: log scrollWidth/clientWidth
+            console.log('[DEBUG] container', container, 'scrollWidth:', container.scrollWidth, 'clientWidth:', container.clientWidth);
+            if (container.scrollWidth > container.clientWidth + 5) {
+                show = true;
+            }
+        });
+        if (this.elements.autoscrollBtn) {
+            // DEBUG: log affichage
+            console.log('[DEBUG] autoscrollBtn display:', show ? 'VISIBLE' : 'HIDDEN');
+            this.elements.autoscrollBtn.style.display = show ? '' : 'none';
+            this.elements.autoscrollBtn.classList.toggle('active', this.isAutoscrolling);
+            // DEBUG: forcer l'affichage pour test
+            // this.elements.autoscrollBtn.style.display = '';
+        }
+    }
+
+    startAutoscroll() {
+        if (this.isAutoscrolling) return;
+        this.isAutoscrolling = true;
+        if (this.elements.autoscrollBtn) this.elements.autoscrollBtn.classList.add('active');
+        const containers = document.querySelectorAll('.waveform-container');
+        const scrollStep = 10; // px per frame (plus rapide)
+        const scrollAll = () => {
+            let reachedEnd = false;
+            containers.forEach(container => {
+                // DEBUG: log scrollLeft
+                console.log('[DEBUG] autoscroll scrollLeft before:', container.scrollLeft);
+                if (container.scrollLeft < container.scrollWidth - container.clientWidth - 1) {
+                    container.scrollLeft = Math.min(container.scrollLeft + scrollStep, container.scrollWidth - container.clientWidth);
+                } else {
+                    reachedEnd = true;
+                }
+            });
+            if (reachedEnd) {
+                this.stopAutoscroll();
+            } else if (this.isAutoscrolling) {
+                this.autoscrollInterval = requestAnimationFrame(scrollAll);
+            }
+        };
+        this.autoscrollInterval = requestAnimationFrame(scrollAll);
+    }
+
+    stopAutoscroll() {
+        this.isAutoscrolling = false;
+        if (this.elements.autoscrollBtn) this.elements.autoscrollBtn.classList.remove('active');
+        if (this.autoscrollInterval) {
+            cancelAnimationFrame(this.autoscrollInterval);
+            this.autoscrollInterval = null;
+        }
+    }
+
+    // À la fin de chaque update/redimensionnement de waveform, appeler updateAutoscrollButtonVisibility
+    // Ajoutons un patch sur les méthodes de waveform
+    patchWaveformAutoscroll() {
+        const self = this;
+        if (this.waveform) {
+            const origUpdate = this.waveform.updateAllWaveforms;
+            this.waveform.updateAllWaveforms = function(...args) {
+                const res = origUpdate.apply(this, args);
+                self.updateAutoscrollButtonVisibility();
+                return res;
+            };
+            const origResize = this.waveform.resizeAllWaveforms;
+            this.waveform.resizeAllWaveforms = function(...args) {
+                const res = origResize.apply(this, args);
+                self.updateAutoscrollButtonVisibility();
+                return res;
+            };
         }
     }
 }

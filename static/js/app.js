@@ -268,6 +268,34 @@ function initializeEventListeners() {
         updateStemOptions();
         updateModelDescription();
     });
+    
+    // Gestion du bouton "Mixer Stems 2"
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.open-mixer2-button');
+        if (btn) {
+            const extractionId = btn.dataset.extractionId;
+            // Activer l'onglet Mixer
+            const mixerTabButton = document.querySelector('.tab-button[data-tab="mixer"]');
+            const mixerTab = document.getElementById('mixerTab');
+            if (mixerTabButton && mixerTab) {
+                document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                mixerTabButton.classList.add('active');
+                mixerTab.classList.add('active');
+            }
+            // Afficher l'iframe mixer2Frame, masquer mixerFrame
+            const mixerFrame = document.getElementById('mixerFrame');
+            const mixer2Frame = document.getElementById('mixer2Frame');
+            if (mixerFrame) mixerFrame.style.display = 'none';
+            if (mixer2Frame) {
+                mixer2Frame.style.display = 'block';
+                mixer2Frame.src = `/mixer_2?extraction_id=${encodeURIComponent(extractionId)}`;
+            }
+            // Optionnel : masquer le loading
+            const loadingDiv = document.getElementById('loading');
+            if (loadingDiv) loadingDiv.style.display = 'none';
+        }
+    });
 }
 
 // Search Functions
@@ -1005,6 +1033,9 @@ function createExtractionElement(item) {
                     <button class="item-button open-mixer-button" data-extraction-id="${item.extraction_id}">
                         <i class="fas fa-sliders-h"></i> Mixer les stems
                     </button>
+                    <button class="item-button open-mixer2-button" data-extraction-id="${item.extraction_id}">
+                        <i class="fas fa-sliders-h"></i> Mixer Stems 2
+                    </button>
                     <button class="item-button open-folder-button" data-file-path="${Object.values(item.output_paths || {})[0] || ''}">
                         <i class="fas fa-download"></i> Get Tracks
                     </button>
@@ -1347,6 +1378,9 @@ function updateExtractionComplete(data) {
         <div class="action-buttons">
             <button class="item-button open-mixer-button" data-extraction-id="${data.extraction_id}">
                 <i class="fas fa-sliders-h"></i> Mixer les stems
+            </button>
+            <button class="item-button open-mixer2-button" data-extraction-id="${data.extraction_id}">
+                <i class="fas fa-sliders-h"></i> Mixer Stems 2
             </button>
             <button class="item-button open-folder-button" data-file-path="${Object.values(data.output_paths || {})[0] || ''}">
                 <i class="fas fa-download"></i> Get Tracks

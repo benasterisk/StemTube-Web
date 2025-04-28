@@ -459,6 +459,11 @@ def mixer():
     extraction_id = request.args.get('extraction_id', '')
     return render_template('mixer.html', extraction_id=extraction_id)
 
+@app.route('/mixer_2')
+def mixer_2():
+    extraction_id = request.args.get('extraction_id', '')
+    return render_template('mixer_2.html', extraction_id=extraction_id)
+
 # API Routes - Search
 @app.route('/api/search', methods=['GET'])
 @api_login_required

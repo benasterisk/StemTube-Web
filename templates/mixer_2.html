@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StemTubes Mixer 2 (DAW)</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/mixer/mixer.css">
+    <!-- WaveSurfer.js & plugins (locaux) -->
+    <script src="https://unpkg.com/wavesurfer.js@7.9.4/dist/wavesurfer.min.js"></script>
+    <script src="/static/js/wavesurfer-plugins/regions.min.js"></script>
+    <script src="/static/js/wavesurfer-plugins/timeline.min.js"></script>
+    <script src="/static/js/wavesurfer-plugins/multitrack.min.js"></script>
+    <script src="/static/js/wavesurfer-plugins/minimap.min.js"></script>
+    <script src="/static/js/wavesurfer-plugins/envelope.min.js"></script>
+    <script src="/static/js/wavesurfer-plugins/hover.min.js"></script>
+    <script src="/static/js/wavesurfer-plugins/record.min.js"></script>
+    <script src="/static/js/wavesurfer-plugins/spectrogram.min.js"></script>
+    <script src="/static/js/wavesurfer-plugins/zoom.min.js"></script>
+    <style>
+        /* Ajustements spécifiques à mixer_2 */
+        .mixer2-app { display: flex; flex-direction: column; height: 100vh; }
+        .mixer2-controls { display: flex; gap: 0.5rem; align-items: center; padding: 0.5rem 1rem; background: var(--bg-primary); border-bottom: 1px solid var(--border-color); }
+        .mixer2-tracks { flex: 1; overflow-y: auto; background: var(--bg-secondary); }
+        .mixer2-track-controls { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.3rem; }
+        .mixer2-track-label { min-width: 80px; font-weight: bold; }
+        .mixer2-fader { width: 80px; }
+        .mixer2-panner { width: 60px; }
+        .mixer2-wavesurfer { width: 100%; min-height: 80px; background: var(--bg-primary); border-radius: 6px; margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+<div class="mixer2-app">
+    <!-- Contrôles globaux -->
+    <div class="mixer2-controls">
+        <button id="m2-play" title="Play/Pause"><i class="fas fa-play"></i></button>
+        <button id="m2-stop" title="Stop"><i class="fas fa-stop"></i></button>
+        <button id="m2-zoom-in" title="Zoom In"><i class="fas fa-search-plus"></i></button>
+        <button id="m2-zoom-out" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
+        <button id="m2-zoom-reset" title="Reset Zoom"><i class="fas fa-compress"></i></button>
+        <button id="m2-autoscroll" title="Autoscroll"><i class="fas fa-angle-double-right"></i></button>
+        <button id="m2-autocenter" title="Autocenter"><i class="fas fa-crosshairs"></i></button>
+        <span id="m2-time">00:00</span>
+    </div>
+    <!-- Timeline -->
+    <div id="m2-timeline"></div>
+    <!-- Multi-pistes -->
+    <div class="mixer2-tracks" id="m2-tracks">
+        <!-- Les pistes seront générées dynamiquement ici -->
+    </div>
+</div>
+<div id="plugin-error" style="color:red;font-weight:bold;margin:1em;"></div>
+<script>
+    // Vérification de la présence des plugins essentiels
+    window.addEventListener('DOMContentLoaded', function() {
+        if (typeof WaveSurfer === 'undefined' || typeof WaveSurfer.Multitrack === 'undefined' || typeof WaveSurfer.Regions === 'undefined') {
+            document.getElementById('plugin-error').textContent =
+                'Erreur : Un ou plusieurs plugins WaveSurfer essentiels (Multitrack, Regions) ne sont pas chargés. Vérifiez que les fichiers plugins sont bien présents dans /static/js/wavesurfer-plugins/.';
+        }
+    });
+</script>
+<script>
+    // Variables d'extraction (comme dans mixer.html)
+    const EXTRACTION_ID = "{{ extraction_id }}";
+    const ENCODED_EXTRACTION_ID = encodeURIComponent(EXTRACTION_ID);
+</script>
+<script src="/static/js/mixer2.js"></script>
+<!-- FontAwesome pour les icônes -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</body>
+</html>
