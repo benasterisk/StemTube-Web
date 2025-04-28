@@ -290,6 +290,35 @@ stemtubes-web/
 - High CPU usage during stem extraction process
 - UI responsiveness issues on mobile devices with small screens
 
+## ⚠️ YouTube Download Limitations & Cookies
+
+Some YouTube videos may fail to download, especially when running this app on cloud servers (like GitHub Codespaces) or VPS. This is due to YouTube's anti-bot protections, which may require authentication or human verification.
+
+**To enable reliable downloads, you can provide your own YouTube cookies.**
+
+### How to Export Your YouTube Cookies
+
+1. **Log in to YouTube** in your browser (Chrome or Firefox recommended).
+2. **Export your cookies** using a browser extension:
+   - [Get cookies.txt](https://chrome.google.com/webstore/detail/get-cookiestxt/)
+   - [Get cookies.txt (Firefox)](https://addons.mozilla.org/en-US/firefox/addon/cookies-txt/)
+3. **Go to youtube.com** and use the extension to export your cookies as a `cookies.txt` file.
+4. **Place `cookies.txt` in the `core/` folder** of your StemTubes Web project **(do NOT commit this file to git!)**
+
+### Security Warning
+- **Never commit your `cookies.txt` to a public repository.**
+- Add `core/cookies.txt` to your `.gitignore` file.
+- Your cookies grant access to your YouTube/Google account. Treat them as sensitive as a password.
+
+### Using Your Cookies
+StemTubes Web will automatically use `core/cookies.txt` for YouTube downloads if the file exists.
+
+### Example `.gitignore` addition
+```
+# Sensitive user cookies
+core/cookies.txt
+```
+
 ## License
 
 2025 StemTubes Web

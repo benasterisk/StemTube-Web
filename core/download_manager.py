@@ -251,7 +251,12 @@ class DownloadManager:
             'ignoreerrors': True,
             'quiet': True,
         }
-        
+
+        # Ajout : utiliser les cookies YouTube si core/cookies.txt existe
+        cookies_path = os.path.join(os.path.dirname(__file__), 'cookies.txt')
+        if os.path.exists(cookies_path):
+            ydl_opts['cookiefile'] = cookies_path
+
         # Add postprocessors for audio downloads
         if item.download_type == DownloadType.AUDIO:
             # Configuration spécifique pour l'audio inspirée de l'implémentation originale

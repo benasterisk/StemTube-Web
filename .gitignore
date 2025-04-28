@@ -49,3 +49,6 @@ wheels/
 # OS specific files
 .DS_Store
 Thumbs.db
+
+# Sensitive user cookies
+core/cookies.txt
