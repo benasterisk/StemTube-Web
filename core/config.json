@@ -1,6 +1,6 @@
 {
     "theme": "dark",
-    "downloads_directory": "D:\\Users\\benas\\OneDrive\\Documents\\Bidouille IT\\Code\\YtDlStemsExtractor\\WebApp\\StemTubesWeb_dev\\core\\downloads",
+    "downloads_directory": "/workspaces/StemTubesWeb/core/downloads",
     "max_concurrent_downloads": 20,
     "preferred_video_quality": "best",
     "preferred_audio_quality": "best",

@@ -473,9 +473,9 @@ def search_videos():
         }), 400
     
     try:
-        print(f"Searching for '{query}', max_results={max_results}")
+        print(f"[DEBUG] /api/search called with query='{query}', max_results={max_results}")
         response = aiotube_client.search_videos(query, max_results=max_results)
-        
+        print(f"[DEBUG] /api/search aiotube_client.search_videos response: {response}")
         # Si la réponse est déjà un dictionnaire avec une clé 'items', on la retourne directement
         if isinstance(response, dict) and 'items' in response:
             print(f"Response already has 'items' key with {len(response['items'])} results")

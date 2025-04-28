@@ -291,7 +291,9 @@ function performSearch() {
     if (searchMode === 'search') {
         // Regular search
         searchParams.append('query', query);
-        searchParams.append('max_results', 10);
+        // Correction : prendre la valeur sélectionnée dans le select
+        const maxResults = document.getElementById('resultsCount').value;
+        searchParams.append('max_results', maxResults);
         
         const searchUrl = `/api/search?${searchParams.toString()}`;
         console.log('Fetching from URL:', searchUrl);
@@ -2065,29 +2067,4 @@ function displaySearchResults(data) {
             openDownloadModal(videoId, button.dataset.title, button.dataset.thumbnail);
         });
     });
-}
-
-// Helper function to get the best thumbnail URL
-function getThumbnailUrl(item) {
-    // Handle different API response structures
-    if (item.snippet && item.snippet.thumbnails) {
-        const thumbnails = item.snippet.thumbnails;
-        return thumbnails.medium?.url || thumbnails.default?.url || '';
-    } else if (item.thumbnails && Array.isArray(item.thumbnails)) {
-        // Find a thumbnail with width between 200 and 400px
-        const mediumThumbnail = item.thumbnails.find(thumb => 
-            thumb.width >= 200 && thumb.width <= 400
-        );
-        
-        if (mediumThumbnail) {
-            return mediumThumbnail.url;
-        }
-        
-        // Fallback to the first thumbnail
-        return item.thumbnails[0]?.url || '';
-    } else if (item.thumbnail) {
-        return item.thumbnail;
-    }
-    
-    return '';
 }

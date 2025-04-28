@@ -18,7 +18,6 @@ from bs4 import BeautifulSoup
 from .config import get_setting
 
 # Constants
-MAX_RESULTS_PER_PAGE = 5
 SEARCH_CACHE_DURATION = 86400  # 24 hours
 
 # Base de données pour le cache
@@ -79,19 +78,9 @@ class AiotubeClient:
     def search_videos(self, query: str, max_results: int = 5, 
                      page_token: Optional[str] = None, 
                      filters: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        """Search for YouTube videos.
-
-        Args:
-            query: Search query.
-            max_results: Maximum number of results to return.
-            page_token: Token for pagination (not used with aiotube, kept for compatibility).
-            filters: Additional filters for the search (not used with aiotube, kept for compatibility).
-
-        Returns:
-            Dictionary containing search results and pagination info.
-        """
-        # Limiter max_results
-        max_results = min(max_results, MAX_RESULTS_PER_PAGE)
+        print(f"[DEBUG] search_videos: query='{query}', max_results={max_results}")
+        # Limiter max_results à 50 pour éviter les abus, mais respecter la valeur UI
+        max_results = min(int(max_results), 50)
 
         # Check cache in SQLite
         filters_str = json.dumps(filters or {}) if filters else "{}"
@@ -116,7 +105,7 @@ class AiotubeClient:
         try:
             # Use aiotube to search for videos
             search_results = aiotube.Search.videos(query, limit=max_results)
-            
+            print(f"[DEBUG] Résultat brut aiotube pour '{query}': {search_results}")
             # Create a response structure similar to YouTube API
             response = {
                 "items": [],
@@ -129,8 +118,10 @@ class AiotubeClient:
             # Add video details for each result
             for video_id in search_results:
                 try:
+                    print(f"[DEBUG] Processing video_id: {video_id}")
                     video = aiotube.Video(video_id)
                     metadata = video.metadata
+                    print(f"[DEBUG] Metadata for {video_id}: {metadata}")
                     
                     # Extraire correctement l'URL de la miniature
                     thumbnail_url = ""
@@ -208,7 +199,29 @@ class AiotubeClient:
                     
                     response["items"].append(item)
                 except Exception as e:
-                    print(f"Error getting video details for {video_id}: {e}")
+                    print(f"[ERROR] Error getting video details for {video_id}: {e}")
+                    # Ajout d'un fallback minimal pour afficher au moins la vidéo dans l'UI
+                    item = {
+                        "id": video_id,
+                        "snippet": {
+                            "title": "",
+                            "channelTitle": "",
+                            "publishedAt": "",
+                            "thumbnails": {
+                                "medium": {
+                                    "url": f"https://i.ytimg.com/vi/{video_id}/mqdefault.jpg"
+                                }
+                            }
+                        },
+                        "contentDetails": {
+                            "duration": ""
+                        },
+                        "statistics": {
+                            "viewCount": "0",
+                            "likeCount": "0"
+                        }
+                    }
+                    response["items"].append(item)
                     continue
             
             # Cache results in SQLite
@@ -220,7 +233,7 @@ class AiotubeClient:
             
             return response
         except Exception as e:
-            print(f"Error searching videos: {e}")
+            print(f"[ERROR] Error searching videos: {e}")
             return {"items": [], "error": str(e)}
         finally:
             conn.close()
@@ -238,22 +251,33 @@ class AiotubeClient:
                     match = re.search(r'v=([^&]+)', video_id)
                     if match:
                         video_id = match.group(1)
+                    else:
+                        print("[ERROR] Impossible d'extraire l'ID vidéo depuis l'URL (format watch)")
+                        return {"error": "Impossible d'extraire l'ID vidéo depuis l'URL (format watch)"}
                 elif "youtu.be/" in video_id:
                     # Format court: https://youtu.be/VIDEO_ID
-                    # Gérer les paramètres supplémentaires comme "si="
                     match = re.search(r'youtu\.be/([^?&]+)', video_id)
                     if match:
                         video_id = match.group(1)
+                    else:
+                        print("[ERROR] Impossible d'extraire l'ID vidéo depuis l'URL (format youtu.be)")
+                        return {"error": "Impossible d'extraire l'ID vidéo depuis l'URL (format youtu.be)"}
                 elif "youtube.com/embed/" in video_id:
                     # Format embed: https://www.youtube.com/embed/VIDEO_ID
                     match = re.search(r'embed/([^?&]+)', video_id)
                     if match:
                         video_id = match.group(1)
+                    else:
+                        print("[ERROR] Impossible d'extraire l'ID vidéo depuis l'URL (format embed)")
+                        return {"error": "Impossible d'extraire l'ID vidéo depuis l'URL (format embed)"}
                 elif "youtube.com/shorts/" in video_id:
                     # Format shorts: https://www.youtube.com/shorts/VIDEO_ID
                     match = re.search(r'shorts/([^?&]+)', video_id)
                     if match:
                         video_id = match.group(1)
+                    else:
+                        print("[ERROR] Impossible d'extraire l'ID vidéo depuis l'URL (format shorts)")
+                        return {"error": "Impossible d'extraire l'ID vidéo depuis l'URL (format shorts)"}
                 
                 print(f" -> ID extrait: {video_id}")
             except Exception as e:
@@ -427,7 +451,7 @@ class AiotubeClient:
 
             return response
         except Exception as e:
-            print(f"Error getting video info: {e}")
+            print(f"[ERROR] Error getting video info: {e}")
             return {"error": str(e)}
         finally:
             conn.close()
