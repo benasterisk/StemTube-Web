@@ -1,0 +1,11 @@
+# Exclure les fichiers générés et volumineux
+core/downloads/
+core/ffmpeg/
+flask_session/
+*.pyc
+__pycache__/
+*.pkl
+*.db
+*.log
+.env
+.DS_Store
