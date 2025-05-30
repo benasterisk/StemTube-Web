@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StemTube Web</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- CSRF protection is disabled for this application -->
+    <!-- Split.js pour le redimensionnement des colonnes -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.5/split.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>StemTube Web</h1>
+            <div class="settings-button" id="settingsButton">
+                <i class="fas fa-cog"></i>
+            </div>
+        </header>
+        
+        <main id="split-main">
+            <!-- Left Column: YouTube Search -->
+            <div class="column search-column" id="left-panel">
+                <div class="search-container">
+                    <div class="search-mode-container">
+                        <label for="searchMode">Mode:</label>
+                        <div class="segmented-control" id="searchMode">
+                            <button class="segment active" data-mode="search">🔍 Search</button>
+                            <button class="segment" data-mode="url">🔗 URL</button>
+                        </div>
+                    </div>
+                    
+                    <div class="search-input-container">
+                        <input type="text" id="searchInput" placeholder="Search YouTube...">
+                        <select id="resultsCount">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="20">20</option>
+                            <option value="30">30</option>
+                            <option value="50">50</option>
+                        </select>
+                        <button id="searchButton"><i class="fas fa-search"></i></button>
+                    </div>
+                </div>
+                
+                <div class="search-results" id="searchResults">
+                    <!-- Search results will be dynamically added here -->
+                </div>
+            </div>
+            
+            <!-- Right Column: Downloads and Extractions -->
+            <div class="column management-column" id="right-panel">
+                <div class="tabs">
+                    <button class="tab-button active" data-tab="downloads">Downloads</button>
+                    <button class="tab-button" data-tab="extractions">Extractions</button>
+                    <button class="tab-button" data-tab="mixer">Mixer</button>
+                </div>
+                
+                <div class="tab-content active" id="downloadsTab">
+                    <h2>Downloads</h2>
+                    <div class="downloads-container" id="downloadsContainer">
+                        <!-- Downloads will be dynamically added here -->
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="extractionsTab">
+                    <h2>Extractions</h2>
+                    <div class="extractions-container" id="extractionsContainer">
+                        <!-- Extractions will be dynamically added here -->
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="mixerTab">
+                    <h2>Audio Mixer</h2>
+                    <div class="mixer-container" id="mixerContainer">
+                        <div id="loading" class="loading">Chargement des stems audio...</div>
+                        <iframe id="mixerFrame" src="/mixer" style="width: 100%; height: 800px; min-height: 800px; border: none; display: none;"></iframe>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Modals -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <span class="close-button">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h3>General Settings</h3>
+                    <div class="setting-item">
+                        <label for="themeSelect">Theme:</label>
+                        <select id="themeSelect">
+                            <option value="dark">Dark</option>
+                            <option value="light">Light</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label for="downloadsDirectory">Downloads Directory:</label>
+                        <input type="text" id="downloadsDirectory">
+                    </div>
+                    <div class="setting-item">
+                        <label for="maxConcurrentDownloads">Max Concurrent Downloads:</label>
+                        <input type="number" id="maxConcurrentDownloads" min="1" max="10" value="3">
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Download Settings</h3>
+                    <div class="setting-item">
+                        <label for="preferredVideoQuality">Preferred Video Quality:</label>
+                        <select id="preferredVideoQuality">
+                            <option value="best">Best</option>
+                            <option value="1080p">1080p</option>
+                            <option value="720p" selected>720p</option>
+                            <option value="480p">480p</option>
+                            <option value="360p">360p</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label for="preferredAudioQuality">Preferred Audio Quality:</label>
+                        <select id="preferredAudioQuality">
+                            <option value="best" selected>Best</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Extraction Settings</h3>
+                    <div class="setting-item">
+                        <label for="useGpuForExtraction">Use GPU for Extraction:</label>
+                        <input type="checkbox" id="useGpuForExtraction" checked>
+                    </div>
+                    <div class="setting-item">
+                        <label for="defaultStemModel">Default Stem Model:</label>
+                        <select id="defaultStemModel">
+                            <option value="htdemucs" selected>htdemucs</option>
+                            <option value="htdemucs_ft">htdemucs_ft</option>
+                            <option value="htdemucs_6s">htdemucs_6s</option>
+                            <option value="mdx_extra">mdx_extra</option>
+                            <option value="mdx_extra_q">mdx_extra_q</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>FFmpeg Status</h3>
+                    <div id="ffmpegStatus" class="ffmpeg-status">
+                        <p>Checking FFmpeg status...</p>
+                    </div>
+                    <button id="downloadFfmpegButton" class="hidden">Download FFmpeg</button>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>GPU Status</h3>
+                    <div id="gpuStatus" class="gpu-status">
+                        <p>Checking GPU status...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="saveSettingsButton">Save Settings</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="downloadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Download Options</h2>
+                <span class="close-button">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="video-info">
+                    <img id="downloadThumbnail" src="" alt="Video Thumbnail">
+                    <h3 id="downloadTitle"></h3>
+                </div>
+                
+                <div class="download-options">
+                    <div class="option-item">
+                        <label for="downloadType">Download Type:</label>
+                        <select id="downloadType">
+                            <option value="audio" selected>Audio (MP3)</option>
+                            <option value="video">Video (MP4)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="option-item" id="videoQualityContainer">
+                        <label for="videoQuality">Video Quality:</label>
+                        <select id="videoQuality">
+                            <option value="best">Best</option>
+                            <option value="1080p">1080p</option>
+                            <option value="720p" selected>720p</option>
+                            <option value="480p">480p</option>
+                            <option value="360p">360p</option>
+                        </select>
+                    </div>
+                    
+                    <div class="option-item" id="audioQualityContainer">
+                        <label for="audioQuality">Audio Quality:</label>
+                        <select id="audioQuality">
+                            <option value="best" selected>Best</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="startDownloadButton">Start Download</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="extractionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Extraction Options</h2>
+                <span class="close-button">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="audio-info">
+                    <h3 id="extractionTitle"></h3>
+                    <p id="extractionPath"></p>
+                </div>
+                
+                <div class="extraction-options">
+                    <div class="option-item">
+                        <label for="stemModel">Stem Model:</label>
+                        <select id="stemModel" class="stem-model-select">
+                            <option value="htdemucs" data-stems="vocals,drums,bass,other" selected>htdemucs</option>
+                            <option value="htdemucs_ft" data-stems="vocals,drums,bass,other">htdemucs_ft</option>
+                            <option value="htdemucs_6s" data-stems="vocals,drums,bass,guitar,piano,other">htdemucs_6s</option>
+                            <option value="mdx_extra" data-stems="vocals,drums,bass,other">mdx_extra</option>
+                            <option value="mdx_extra_q" data-stems="vocals,drums,bass,other">mdx_extra_q</option>
+                        </select>
+                        <p id="modelDescription" class="model-description"></p>
+                    </div>
+                    
+                    <div class="option-item">
+                        <label>Select Stems to Extract:</label>
+                        <div class="stem-checkboxes" id="stemCheckboxes">
+                            <div class="stem-checkbox">
+                                <input type="checkbox" id="vocalsCheckbox" checked>
+                                <label for="vocalsCheckbox">Vocals</label>
+                            </div>
+                            <div class="stem-checkbox">
+                                <input type="checkbox" id="drumsCheckbox" checked>
+                                <label for="drumsCheckbox">Drums</label>
+                            </div>
+                            <div class="stem-checkbox">
+                                <input type="checkbox" id="bassCheckbox" checked>
+                                <label for="bassCheckbox">Bass</label>
+                            </div>
+                            <div class="stem-checkbox">
+                                <input type="checkbox" id="otherCheckbox" checked>
+                                <label for="otherCheckbox">Other</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="option-item">
+                        <div class="two-stem-mode">
+                            <input type="checkbox" id="twoStemMode">
+                            <label for="twoStemMode">Two-Stem Mode (Isolate one stem vs. everything else)</label>
+                        </div>
+                    </div>
+                    
+                    <div class="option-item" id="primaryStemContainer" style="display: none;">
+                        <label for="primaryStem">Primary Stem:</label>
+                        <select id="primaryStem">
+                            <option value="vocals" selected>Vocals</option>
+                            <option value="drums">Drums</option>
+                            <option value="bass">Bass</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="startExtractionButton">Start Extraction</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+    
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    
+    <!-- Script for handling mixer iframe loading -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Fonction pour détecter les appareils mobiles
+            function isMobileDevice() {
+                return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
+                    || window.innerWidth <= 768;
+            }
+            
+            // Initialiser Split.js pour le redimensionnement des colonnes (seulement sur desktop)
+            let split = null;
+            
+            if (!isMobileDevice()) {
+                split = Split(['#left-panel', '#right-panel'], {
+                    sizes: [30, 70],
+                    minSize: [200, 400],
+                    gutterSize: 10,
+                    snapOffset: 0,
+                    cursor: 'col-resize',
+                    onDrag: function() {
+                        // Déclencher un événement de redimensionnement pour mettre à jour l'iframe du mixer si nécessaire
+                        window.dispatchEvent(new Event('resize'));
+                    }
+                });
+
+                // Sauvegarder les tailles des colonnes dans le localStorage
+                window.addEventListener('unload', () => {
+                    if (split) {
+                        localStorage.setItem('split-sizes', JSON.stringify(split.getSizes()));
+                    }
+                });
+
+                // Restaurer les tailles des colonnes depuis le localStorage
+                const savedSizes = localStorage.getItem('split-sizes');
+                if (savedSizes) {
+                    try {
+                        const sizes = JSON.parse(savedSizes);
+                        split.setSizes(sizes);
+                    } catch (e) {
+                        console.error('Erreur lors de la restauration des tailles des colonnes:', e);
+                    }
+                }
+            } else {
+                // Sur mobile, appliquer les styles de colonne pleine largeur
+                document.getElementById('left-panel').style.width = '100%';
+                document.getElementById('right-panel').style.width = '100%';
+                document.getElementById('split-main').style.flexDirection = 'column';
+            }
+            
+            // Détecter les changements de taille d'écran et réinitialiser si nécessaire
+            window.addEventListener('resize', () => {
+                const nowMobile = isMobileDevice();
+                const wasMobile = split === null;
+                
+                if (nowMobile && !wasMobile && split) {
+                    // Passage de desktop à mobile
+                    split.destroy();
+                    split = null;
+                    document.getElementById('left-panel').style.width = '100%';
+                    document.getElementById('right-panel').style.width = '100%';
+                    document.getElementById('split-main').style.flexDirection = 'column';
+                } else if (!nowMobile && wasMobile) {
+                    // Passage de mobile à desktop
+                    location.reload(); // Plus simple de recharger la page
+                }
+            });
+            
+            const mixerFrame = document.getElementById('mixerFrame');
+            const loadingDiv = document.getElementById('loading');
+            
+            // Show the iframe once it's loaded
+            mixerFrame.onload = function() {
+                loadingDiv.style.display = 'none';
+                mixerFrame.style.display = 'block';
+                
+                // Set the iframe height to match its content
+                try {
+                    // Set a timer to check the content height periodically
+                    const checkHeight = () => {
+                        try {
+                            // Get the document height of the iframe content
+                            const frameDoc = mixerFrame.contentDocument || mixerFrame.contentWindow.document;
+                            const scrollHeight = Math.max(
+                                frameDoc.body.scrollHeight, 
+                                frameDoc.documentElement.scrollHeight,
+                                frameDoc.body.offsetHeight, 
+                                frameDoc.documentElement.offsetHeight
+                            );
+                            
+                            // Set the iframe height to match content (minimum 800px)
+                            if (scrollHeight > 800) {
+                                mixerFrame.style.height = scrollHeight + 'px';
+                            }
+                        } catch (e) {
+                            console.log('Could not resize iframe: ' + e.message);
+                        }
+                    };
+                    
+                    // Check height initially and periodically
+                    checkHeight();
+                    setInterval(checkHeight, 2000); // Check every 2 seconds
+                    
+                    // Also listen for window resize events
+                    window.addEventListener('resize', checkHeight);
+                } catch (e) {
+                    console.log('Error setting up iframe resizing: ' + e.message);
+                }
+            };
+            
+            // Handle tab switching to ensure iframe loads properly
+            document.querySelectorAll('.tab-button').forEach(button => {
+                if (button.dataset.tab === 'mixer') {
+                    button.addEventListener('click', () => {
+                        // If iframe hasn't loaded yet, make sure loading indicator is visible
+                        if (mixerFrame.style.display === 'none') {
+                            loadingDiv.style.display = 'block';
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StemTubes Mixer</title>
+    <!-- CSS principal de StemTubes -->
+    <link rel="stylesheet" href="/static/css/style.css">
+    <!-- CSS spécifique au mixeur (modulaire) -->
+    <link rel="stylesheet" href="/static/css/mixer/mixer.css">
+    <!-- Font Awesome pour les icônes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="mixer-app" id="mixer-app" style="display: none;">
+        <!-- Fixed header containing transport controls and timeline -->
+        <div class="fixed-header">
+            <!-- Barre de transport avec contrôles de lecture -->
+            <div class="transport-container">
+                <div class="transport-controls">
+                    <button id="play-btn" class="transport-btn play">
+                        <i class="fas fa-play"></i> Play
+                    </button>
+                    <button id="stop-btn" class="transport-btn stop">
+                        <i class="fas fa-stop"></i> Stop
+                    </button>
+                    <div class="time-display" id="time-display">00:00</div>
+                </div>
+                <div class="zoom-controls">
+                    <div class="zoom-group">
+                        <span class="zoom-label">H:</span>
+                        <button id="zoom-out-h" class="zoom-btn" title="Réduire zoom horizontal">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <button id="zoom-in-h" class="zoom-btn" title="Augmenter zoom horizontal">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <div class="zoom-group">
+                        <span class="zoom-label">V:</span>
+                        <button id="zoom-out-v" class="zoom-btn" title="Réduire zoom vertical">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <button id="zoom-in-v" class="zoom-btn" title="Augmenter zoom vertical">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <button id="zoom-reset" class="zoom-btn" title="Réinitialiser zoom">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Timeline avec marqueurs de temps et tête de lecture -->
+            <div class="timeline-container">
+                <div class="timeline" id="timeline">
+                    <div id="timeline-playhead" class="playhead"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Scrollable content area -->
+        <div class="scrollable-content">
+            <!-- Conteneur pour les pistes audio -->
+            <div class="tracks-container" id="tracks-container">
+                <!-- Les pistes seront générées dynamiquement ici -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Écran de chargement -->
+    <div class="loading-container" id="loading-container">
+        <div class="loading-spinner"></div>
+        <h2>Chargement des stems audio...</h2>
+        <p>Veuillez patienter pendant le chargement des pistes</p>
+    </div>
+    
+    <!-- Initialisation des variables pour le mixeur -->
+    <script>
+        // Informations d'extraction
+        const EXTRACTION_ID = "{{ extraction_id }}";
+        // Encoder correctement l'ID pour les URLs
+        const ENCODED_EXTRACTION_ID = encodeURIComponent(EXTRACTION_ID);
+    </script>
+    
+    <!-- Scripts modulaires -->
+    <script src="/static/js/mixer/timeline.js"></script>
+    <script src="/static/js/mixer/waveform.js"></script>
+    <script src="/static/js/mixer/track-controls.js"></script>
+    <script src="/static/js/mixer/audio-engine.js"></script>
+    <script src="/static/js/mixer/mobile-audio-engine.js"></script>
+    <script src="/static/js/mixer/mobile-debug-fix.js"></script>
+    <script src="/static/js/mixer/core.js"></script>
+</body>
+</html>
