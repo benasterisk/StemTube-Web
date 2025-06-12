@@ -892,10 +892,11 @@ def open_folder_route():
 
 @app.route('/api/download-file', methods=['GET'])
 @api_login_required
-def download_file_route():
+def download_file_route(file_path=None):
     """Download a file."""
     try:
-        file_path = request.args.get('file_path')
+        if file_path is None:
+            file_path = request.args.get('file_path')
         
         if not file_path or not os.path.exists(file_path):
             return jsonify({
@@ -936,13 +937,8 @@ def download_file_route():
 @api_login_required
 def download_file_compatible():
     """Route compatible pour le téléchargement de fichiers."""
-    # Convertir path en file_path
     path = request.args.get('path')
-    if path:
-        request.args = request.args.copy()
-        request.args = dict(request.args)
-        request.args['file_path'] = path
-    return download_file_route()
+    return download_file_route(file_path=path)
 
 @app.route('/api/test_stems/<stem_file>', methods=['GET'])
 @api_login_required
