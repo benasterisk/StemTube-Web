@@ -13,6 +13,12 @@ from enum import Enum
 
 import yt_dlp
 
+from .processed_db import (
+    get_download_path,
+    save_download_path,
+    remove_download,
+)
+
 from .config import get_setting, update_setting, get_ffmpeg_path, DOWNLOADS_DIR, ensure_valid_downloads_directory
 
 
@@ -224,6 +230,20 @@ class DownloadManager:
         Args:
             item: Download item to start.
         """
+        # Check if this video was already downloaded
+        existing = get_download_path(item.video_id)
+        if existing and os.path.exists(existing):
+            item.file_path = existing
+            item.status = DownloadStatus.COMPLETED
+            item.progress = 100.0
+            del self.queued_downloads[item.download_id]
+            self.completed_downloads[item.download_id] = item
+            if self.on_download_complete:
+                self.on_download_complete(item.download_id, item.title, item.file_path)
+            return
+        elif existing and not os.path.exists(existing):
+            remove_download(item.video_id)
+
         # Update status
         item.status = DownloadStatus.DOWNLOADING
         self.active_downloads[item.download_id] = item
@@ -241,6 +261,25 @@ class DownloadManager:
         # Create subdirectory for the content type (audio, video, stems)
         output_dir = os.path.join(video_dir, item.download_type.value)
         os.makedirs(output_dir, exist_ok=True)
+
+        # Check on disk for an existing file
+        exts = ['.mp3'] if item.download_type == DownloadType.AUDIO else ['.mp4', '.mkv', '.webm']
+        existing_file = None
+        for f in os.listdir(output_dir):
+            if os.path.splitext(f)[1].lower() in exts:
+                existing_file = os.path.join(output_dir, f)
+                break
+
+        if existing_file and os.path.exists(existing_file):
+            item.file_path = existing_file
+            item.status = DownloadStatus.COMPLETED
+            item.progress = 100.0
+            del self.queued_downloads[item.download_id]
+            self.completed_downloads[item.download_id] = item
+            save_download_path(item.video_id, item.file_path)
+            if self.on_download_complete:
+                self.on_download_complete(item.download_id, item.title, item.file_path)
+            return
         
         # Configure yt-dlp options
         ydl_opts = {
@@ -347,6 +386,7 @@ class DownloadManager:
                     if item.download_id in self.active_downloads:
                         del self.active_downloads[item.download_id]
                     self.completed_downloads[item.download_id] = item
+                    save_download_path(item.video_id, item.file_path)
                     
                     # Notify completion
                     if self.on_download_complete:

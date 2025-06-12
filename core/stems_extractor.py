@@ -22,6 +22,21 @@ from demucs.apply import apply_model
 from demucs.separate import load_track
 
 from .config import get_setting, STEM_MODELS, MODELS_DIR, get_ffmpeg_path, ensure_valid_downloads_directory
+from .processed_db import (
+    get_extraction_dir,
+    save_extraction_dir,
+    remove_extraction,
+)
+import hashlib
+
+
+def _file_hash(path: str) -> str:
+    """Return SHA256 hash of a file."""
+    h = hashlib.sha256()
+    with open(path, 'rb') as f:
+        for chunk in iter(lambda: f.read(8192), b''):
+            h.update(chunk)
+    return h.hexdigest()
 
 
 class ExtractionStatus(Enum):
@@ -249,14 +264,53 @@ class StemsExtractor:
         Args:
             item: Extraction item to start.
         """
+        # Compute audio hash for caching
+        audio_hash = _file_hash(item.audio_path) if os.path.exists(item.audio_path) else None
+
+        # Check database for previous extraction
+        cached_dir = get_extraction_dir(audio_hash) if audio_hash else None
+        check_dir = cached_dir or item.output_dir
+
+        # Look for existing stems in the directory
+        expected_stems = item.selected_stems if item.selected_stems else ["vocals", "drums", "bass", "other"]
+        found = {}
+        for stem in expected_stems:
+            mp3 = os.path.join(check_dir, f"{stem}.mp3")
+            wav = os.path.join(check_dir, f"{stem}.wav")
+            if os.path.exists(mp3):
+                found[stem] = mp3
+            elif os.path.exists(wav):
+                found[stem] = wav
+            else:
+                found = None
+                break
+
+        if found:
+            item.output_dir = check_dir
+            item.output_paths = found
+            zip_path = os.path.join(check_dir, f"{os.path.splitext(os.path.basename(item.audio_path))[0]}_stems.zip")
+            if os.path.exists(zip_path):
+                item.zip_path = zip_path
+            item.status = ExtractionStatus.COMPLETED
+            item.progress = 100.0
+            self.completed_extractions[item.extraction_id] = item
+            if audio_hash:
+                save_extraction_dir(audio_hash, check_dir)
+            if self.on_extraction_complete:
+                self.on_extraction_complete(item.extraction_id)
+            return
+
+        if cached_dir and not os.path.exists(cached_dir):
+            remove_extraction(audio_hash)
+
         # Update status
         item.status = ExtractionStatus.EXTRACTING
         self.active_extractions[item.extraction_id] = item
-        
+
         # Notify extraction start
         if self.on_extraction_start:
             self.on_extraction_start(item.extraction_id)
-        
+
         # Create output directory if it doesn't exist
         os.makedirs(item.output_dir, exist_ok=True)
         
@@ -512,6 +566,13 @@ class StemsExtractor:
                 # Move from active to completed
                 del self.active_extractions[item.extraction_id]
                 self.completed_extractions[item.extraction_id] = item
+
+                # Cache result directory
+                try:
+                    audio_hash = _file_hash(item.audio_path)
+                    save_extraction_dir(audio_hash, item.output_dir)
+                except Exception:
+                    pass
                 
                 # Notify extraction complete
                 if self.on_extraction_complete:
@@ -525,6 +586,12 @@ class StemsExtractor:
             # Move from active to failed
             del self.active_extractions[item.extraction_id]
             self.failed_extractions[item.extraction_id] = item
+
+            try:
+                audio_hash = _file_hash(item.audio_path)
+                remove_extraction(audio_hash)
+            except Exception:
+                pass
             
             # Notify extraction error
             if self.on_extraction_error:
