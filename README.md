@@ -233,7 +233,7 @@ Modular components for the audio mixing interface.
 
 ### File Operations
 
-- `GET /api/download_file/:id`: Download processed file
+- `GET /api/download-file?file_path=...`: Download processed file. Provide the target file path in the `file_path` query parameter.
 - `GET /api/waveform`: Generate waveform data
 - `POST /api/export_mix`: Create mixdown of modified stems
 
