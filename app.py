@@ -1133,9 +1133,9 @@ def export_mix():
     data = request.json
     stems_data = data.get('stems', {})
     
+    temp_dir = tempfile.mkdtemp()
     try:
         # Créer un répertoire temporaire pour le traitement
-        temp_dir = tempfile.mkdtemp()
         output_file = os.path.join(ensure_valid_downloads_directory(), f"mix_{uuid.uuid4()}.wav")
         
         # Traiter chaque stem avec FFmpeg
@@ -1192,10 +1192,7 @@ def export_mix():
         ]
         
         subprocess.run(cmd, check=True)
-        
-        # Nettoyer les fichiers temporaires
-        shutil.rmtree(temp_dir)
-        
+
         return jsonify({
             "success": True,
             "file_path": output_file
@@ -1203,6 +1200,10 @@ def export_mix():
     except Exception as e:
         print(f"Erreur lors de l'exportation du mix: {e}")
         return jsonify({"success": False, "error": str(e)})
+    finally:
+        # Always clean up the temporary directory
+        if os.path.isdir(temp_dir):
+            shutil.rmtree(temp_dir, ignore_errors=True)
 
 @app.route('/api/waveform_raw', methods=['GET'])
 @api_login_required
