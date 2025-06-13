@@ -17,9 +17,16 @@ import sys
 
 import torch
 import torchaudio
-from demucs.pretrained import get_model
-from demucs.apply import apply_model
-from demucs.separate import load_track
+if not hasattr(torch, 'Tensor'):  # pragma: no cover - stubbed torch
+    class _DummyTensor:
+        pass
+    torch.Tensor = _DummyTensor
+try:
+    from demucs.pretrained import get_model
+    from demucs.apply import apply_model
+    from demucs.separate import load_track
+except Exception:  # pragma: no cover - allow tests without demucs
+    get_model = apply_model = load_track = None
 
 from .config import get_setting, STEM_MODELS, MODELS_DIR, get_ffmpeg_path, ensure_valid_downloads_directory
 from .processed_db import (
