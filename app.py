@@ -945,10 +945,14 @@ def download_file_route(file_path=None):
         # Le dossier contenant le fichier
         directory = os.path.dirname(file_path)
         
-        with open(file_path, 'rb') as f:
-            data = f.read()
-        response = Response(data, mimetype='application/octet-stream')
-        response.headers['Content-Disposition'] = f'attachment; filename={filename}'
+        response = send_from_directory(
+            directory,
+            filename,
+            as_attachment=True,
+            download_name=filename
+        )
+        # Ensure response data is accessible in tests
+        response.direct_passthrough = False
         return response
     except Exception as e:
         print(f"Error downloading file: {e}")

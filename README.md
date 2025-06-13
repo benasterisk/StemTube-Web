@@ -31,7 +31,6 @@ The application features real-time progress updates, an integrated user authenti
 
 - **YouTube Integration**: Search and discover YouTube content
 - **Download Management**: Queue-based download system with progress tracking
-- **Smart Caching**: Existing downloads and stem extractions are reused
 - **Stem Extraction**: AI-powered audio separation using Demucs
 - **Interactive Mixer**: Visual waveform display with audio controls
 - **User Authentication**: Multi-user support with role-based access
@@ -128,7 +127,6 @@ Manages the download queue and handles video/audio download operations.
 - `DownloadItem`: Data structure for download tasks
 - `DownloadType`: Enum for download types (AUDIO/VIDEO)
 - `DownloadStatus`: Enum for download states
-- Skips download if the target file already exists
 
 ### 3. Stems Extractor (core/stems_extractor.py)
 
@@ -138,7 +136,6 @@ Handles the extraction of audio stems from downloaded tracks.
 - `StemsExtractor`: Main class for extraction operations
 - `ExtractionItem`: Data structure for extraction tasks
 - `ExtractionStatus`: Enum for extraction states
-- Reuses existing stem files if found in the output directory
 
 ### 4. YouTube Client (core/aiotube_client.py)
 
@@ -245,7 +242,6 @@ stemtubes-web/
 ├── app.py                  # Main Flask application
 ├── requirements.txt        # Python dependencies
 ├── stemtubes.db            # SQLite database
-├── processed.db            # Cache of processed files
 │
 ├── core/                   # Core Python modules
 │   ├── __init__.py
