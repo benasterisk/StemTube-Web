@@ -12,8 +12,14 @@ from pathlib import Path
 
 import aiotube
 import re
-import requests
-from bs4 import BeautifulSoup
+try:
+    import requests
+except Exception:  # pragma: no cover - allow tests without requests
+    requests = None
+try:
+    from bs4 import BeautifulSoup
+except Exception:  # pragma: no cover - allow tests without BeautifulSoup
+    BeautifulSoup = None
 
 from .config import get_setting
 

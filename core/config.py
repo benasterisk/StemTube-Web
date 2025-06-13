@@ -6,7 +6,12 @@ import os
 import json
 import platform
 from pathlib import Path
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+except Exception:  # pragma: no cover - fallback when dotenv isn't available
+    def load_dotenv(*args, **kwargs):
+        """Fallback no-op if python-dotenv is not installed."""
+        return None
 import tempfile
 import urllib.request
 import zipfile
