@@ -194,12 +194,6 @@ class AiotubeClient:
                         if '?' in thumbnail_url:
                             thumbnail_url = thumbnail_url.split('?')[0]
                     
-                    # Debug: Afficher les métadonnées pour comprendre la structure
-                    print(f"DEBUG - Video ID: {video_id}")
-                    print(f"DEBUG - Thumbnail URL: {thumbnail_url}")
-                    print(f"DEBUG - Metadata keys: {metadata.keys()}")
-                    if "thumbnails" in metadata:
-                        print(f"DEBUG - Thumbnails: {metadata['thumbnails']}")
                     
                     # Extraire correctement la durée
                     duration = ""
@@ -401,12 +395,6 @@ class AiotubeClient:
                     if '?' in thumbnail_url:
                         thumbnail_url = thumbnail_url.split('?')[0]
                 
-                # Debug: Afficher les métadonnées pour comprendre la structure
-                print(f"DEBUG - Video ID: {video_id}")
-                print(f"DEBUG - Thumbnail URL: {thumbnail_url}")
-                print(f"DEBUG - Metadata keys: {metadata.keys()}")
-                if "thumbnails" in metadata:
-                    print(f"DEBUG - Thumbnails: {metadata['thumbnails']}")
                 
                 # Extraire correctement la durée
                 duration = ""
