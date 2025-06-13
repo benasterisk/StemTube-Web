@@ -11,6 +11,7 @@ from typing import Dict, List, Any, Optional, Tuple
 from pathlib import Path
 
 import aiotube
+import yt_dlp
 import re
 try:
     import requests
@@ -82,6 +83,31 @@ class AiotubeClient:
         conn.commit()
         conn.close()
 
+    def _fetch_video_metadata(self, video_id: str) -> Optional[Dict[str, Any]]:
+        """Fetch metadata for a video using aiotube with yt-dlp fallback."""
+        try:
+            video = aiotube.Video(f"https://www.youtube.com/watch?v={video_id}")
+            return video.metadata
+        except Exception as e:
+            print(f"aiotube failed for {video_id}: {e}")
+            # Fallback to yt-dlp which tends to be more robust
+            try:
+                ydl_opts = {"quiet": True, "skip_download": True}
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    info = ydl.extract_info(video_id, download=False)
+                return {
+                    "title": info.get("title"),
+                    "channel": {"name": info.get("uploader")},
+                    "uploadDate": info.get("upload_date"),
+                    "thumbnails": info.get("thumbnails"),
+                    "duration": info.get("duration"),
+                    "views": info.get("view_count"),
+                    "likes": info.get("like_count"),
+                }
+            except Exception as ytdlp_error:
+                print(f"yt-dlp failed for {video_id}: {ytdlp_error}")
+                return None
+
     def search_videos(self, query: str, max_results: int = 5, 
                      page_token: Optional[str] = None, 
                      filters: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
@@ -135,8 +161,9 @@ class AiotubeClient:
             # Add video details for each result
             for video_id in search_results:
                 try:
-                    video = aiotube.Video(video_id)
-                    metadata = video.metadata
+                    metadata = self._fetch_video_metadata(video_id)
+                    if not metadata:
+                        continue
                     
                     # Extraire correctement l'URL de la miniature
                     thumbnail_url = ""
@@ -340,10 +367,10 @@ class AiotubeClient:
                     print(f"Erreur lors de la récupération des informations web: {web_error}")
                     # Continuer avec les informations de base, sans arrêter le processus
             else:
-                # Utiliser aiotube pour les IDs standard
-                # Get video information using aiotube
-                video = aiotube.Video(video_id)
-                metadata = video.metadata
+                # Utiliser aiotube pour les IDs standard avec fallback
+                metadata = self._fetch_video_metadata(video_id)
+                if metadata is None:
+                    return {"error": "Failed to fetch video info"}
                 
                 # Extraire correctement l'URL de la miniature
                 thumbnail_url = ""
@@ -475,8 +502,8 @@ class AiotubeClient:
             suggestions = []
             for video_id in search_results:
                 try:
-                    video = aiotube.Video(video_id)
-                    title = video.metadata.get("title", "")
+                    metadata = self._fetch_video_metadata(video_id)
+                    title = metadata.get("title", "") if metadata else ""
                     if title and title not in suggestions:
                         suggestions.append(title)
                 except Exception as e:
