@@ -135,7 +135,9 @@ class AiotubeClient:
             # Add video details for each result
             for video_id in search_results:
                 try:
-                    video = aiotube.Video(video_id)
+                    # Pass full URL to aiotube to handle IDs with hyphens or
+                    # other non-word characters
+                    video = aiotube.Video(f"https://www.youtube.com/watch?v={video_id}")
                     metadata = video.metadata
                     
                     # Extraire correctement l'URL de la miniature
@@ -341,8 +343,9 @@ class AiotubeClient:
                     # Continuer avec les informations de base, sans arrêter le processus
             else:
                 # Utiliser aiotube pour les IDs standard
-                # Get video information using aiotube
-                video = aiotube.Video(video_id)
+                # Pass full URL to aiotube to correctly parse IDs containing
+                # non-word characters such as hyphens
+                video = aiotube.Video(f"https://www.youtube.com/watch?v={video_id}")
                 metadata = video.metadata
                 
                 # Extraire correctement l'URL de la miniature
@@ -475,7 +478,9 @@ class AiotubeClient:
             suggestions = []
             for video_id in search_results:
                 try:
-                    video = aiotube.Video(video_id)
+                    # Provide the full URL so aiotube handles IDs with special
+                    # characters correctly
+                    video = aiotube.Video(f"https://www.youtube.com/watch?v={video_id}")
                     title = video.metadata.get("title", "")
                     if title and title not in suggestions:
                         suggestions.append(title)
